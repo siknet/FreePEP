@@ -1,9 +1,3 @@
----
-theme: default
-themeName: "默认主题"
-title: "gztxtlist"
----
-
 # 人教版 **普通高中教科书** 电子课本下载导航
 
 > 点击对应教材名称即可直接下载课本 PDF。
