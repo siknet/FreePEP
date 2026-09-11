@@ -1,3 +1,9 @@
+---
+theme: default
+themeName: "默认主题"
+title: "txtlist"
+---
+
 # 人教版义务教育教材（六三学制）小学电子课本下载导航
 
 > 点击对应教材名称即可直接下载课本 PDF。
