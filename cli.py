@@ -10,6 +10,7 @@
 
 import sys
 import os
+import re
 import argparse
 from typing import List, Dict
 from pep_core import PepCatalog, PepDownloader, XD_ORDER, XK_ORDER_PREFIX, NJ_ORDER, sort_xk_key, sort_nj_key

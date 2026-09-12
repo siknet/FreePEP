@@ -5,6 +5,7 @@
 
 import os
 import sys
+import re
 import time
 import json
 import asyncio
@@ -112,7 +113,7 @@ class TaskManager:
 
                 self.log(f"==================================================")
                 self.log(f"[*] 开始下载教材: [{safe_xd}/{safe_nj}] 《{book_to_download.get('title')}》")
-                downloader.download_book(
+                result = downloader.download_book(
                     book_id=book_to_download["id"],
                     custom_title=book_to_download.get("title"),
                     sub_dir=sub_dir,
@@ -121,7 +122,16 @@ class TaskManager:
                     skip_if_exists=True,
                     clean_temp=True
                 )
+                if result:
+                    with self._lock:
+                        self.status_text = f"已完成：《{book_to_download.get('title')}》"
+                else:
+                    with self._lock:
+                        self.status_text = f"下载失败：《{book_to_download.get('title')}》"
+                    self.log(f"[-] 《{book_to_download.get('title')}》未生成 PDF（可能无法读取页数或页面被拦截）")
             except Exception as e:
+                with self._lock:
+                    self.status_text = f"下载异常：{e}"
                 self.log(f"[-] 下载异常: {e}")
 
             time.sleep(1)
@@ -560,26 +570,44 @@ def index_page():
         }
 
         async function downloadSingle(id) {
-            await fetch('/api/download', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ book_ids: [id] })
-            });
-            pollStatus();
+            try {
+                const res = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book_ids: [id] })
+                });
+                const data = await res.json();
+                if (!data.added_count) {
+                    alert('未能加入下载队列，请刷新目录后重试。');
+                    return;
+                }
+                pollStatus();
+            } catch (e) {
+                alert('提交下载失败: ' + e);
+            }
         }
 
         async function downloadSelected() {
             const ids = Array.from(selectedBookIds);
             if (ids.length === 0) return;
-            await fetch('/api/download', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ book_ids: ids })
-            });
-            selectedBookIds.clear();
-            updateSelectionUI();
-            renderBookGrid();
-            pollStatus();
+            try {
+                const res = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book_ids: ids })
+                });
+                const data = await res.json();
+                if (!data.added_count) {
+                    alert('未能加入下载队列，请刷新目录后重试。');
+                    return;
+                }
+                selectedBookIds.clear();
+                updateSelectionUI();
+                renderBookGrid();
+                pollStatus();
+            } catch (e) {
+                alert('提交下载失败: ' + e);
+            }
         }
 
         async function refreshCatalog() {
